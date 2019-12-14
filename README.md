@@ -2,7 +2,7 @@
  Nearest Centroid IMplementation for recognizing Fingerspelling Gestures from Sensor Glove
  -- Fork from https://gitlab.com/linev8k/in-hand-gesture-glove
 
-Thanks again to Line Ziegler for letting me use her code!!!
+Thanks again to Jocelyn Ziegler for letting me use her code!!!
 
 # Original README:
 
