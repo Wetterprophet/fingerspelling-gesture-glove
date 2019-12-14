@@ -1,0 +1,25 @@
+	//get class of smallest distance
+
+        short predict_class_index = 0;
+        for(short i = 1; i<n_classes;i++) {
+            if (all_distances[i] < all_distances[predict_class_index]) {
+                 predict_class_index = i;
+                 }
+            }
+            short predict_class = target[predict_class_index];
+	    Serial.print(F("Class: "));
+            Serial.print(predict_class);
+
+	    //send class via BLE
+	    classificationInt.writeValue(predict_class);
+
+
+            }
+
+      }
+       //set button back to low
+       //digitalWrite(button_pin, LOW);
+     }
+    }
+   }
+}

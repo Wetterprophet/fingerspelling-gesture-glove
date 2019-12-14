@@ -1,0 +1,27 @@
+	
+	//compute distance per dimension and add them for multidimensional DTW (simple approach)
+     	short sensor_data_dim[steps];
+    
+     	for (short i=0; i<size_inPins; i++) {
+          	for (short j=0; j<steps; j++) {
+              	sensor_data_dim[j] = sensor_data[j][i];
+            
+          	}
+
+		//smooth out measurement errors
+   		smooth((short*)sensor_data_dim);
+
+		//normalize with z-transformation
+		normalize((short*)sensor_data_dim);
+
+ 		Serial.println();
+       
+          	for (short j = 0; j<steps; j++) {
+           	 if(j>0){
+             	  Serial.print(F(","));
+           	}
+            	 Serial.print(sensor_data_dim[j]);
+          	}
+        
+      		Serial.println();
+

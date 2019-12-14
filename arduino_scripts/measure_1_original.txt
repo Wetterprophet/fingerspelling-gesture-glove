@@ -1,0 +1,88 @@
+
+
+boolean measure = false; //boolean for flow control
+
+
+//define settings of measurement
+const int duration = 2000; //in milliseconds
+const int pause = 25; //in milliseconds
+const int steps = duration/pause;
+
+//use pin D5 for starting measurement
+const int button_pin = 5;
+int button_state = 0;
+
+
+
+void setup() {
+
+  Serial.begin(9600);
+
+}
+
+void loop() {
+
+  //initialize input pins
+  //run once
+
+  if(!measure) {
+
+    for (int i = 0; i< size_inPins; i++){
+
+          pinMode(inPins[i], INPUT);
+    }
+    pinMode(button_pin, INPUT);
+
+    measure = true;
+
+
+   //end initializing
+
+
+   //start actual loop
+  while (measure) {
+
+
+
+     button_state = digitalRead(button_pin);
+
+     //start measuring if button is pressed
+     if (button_state == HIGH) {
+
+
+      int sensor_data[steps][size_inPins];
+
+      for (int i = 0; i < steps; i++) {
+          for (int j = 0; j < size_inPins; j++) {
+
+
+            sensor_data[i][j] = analogRead(inPins[j]);
+
+            }
+         delay(pause);
+        }
+
+
+        //write out sensor data that can be read by python script
+        for(int i=0; i<steps;i++){
+          if(i>0){
+            Serial.print(";");
+           }
+
+          for (int j = 0; j<size_inPins; j++) {
+           if(j>0){
+             Serial.print(",");
+           }
+            Serial.print(sensor_data[i][j]);
+          }
+        }
+       Serial.print("\n"); //end line to stop reading in
+
+       //set button back to low
+       digitalWrite(button_pin, LOW);
+
+     }
+
+   }
+  }
+}

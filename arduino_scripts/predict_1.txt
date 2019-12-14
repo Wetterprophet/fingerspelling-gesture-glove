@@ -1,0 +1,142 @@
+
+//bluetooth communication library
+#include <ArduinoBLE.h>
+//set up service and characteristic for BLE communication
+BLEService classificationService("f36aa955-0c78-43b6-bcb6-1b4d37b2c80b");
+BLEShortCharacteristic classificationInt("62855a59-0dcf-4fc3-8417-89f93f334222", BLERead | BLENotify);
+
+
+//use pin D5 for starting measurement
+const int button_pin = 5;
+int button_state = 0;
+
+#include "MegunoLink.h"
+#include "Filter.h"
+const int filterIntensity = 1;
+ExponentialFilter<long> A1Filter(filterIntensity, 0);
+ExponentialFilter<long> A2Filter(filterIntensity, 0);
+ExponentialFilter<long> A3Filter(filterIntensity, 0);
+ExponentialFilter<long> A4Filter(filterIntensity, 0);
+ExponentialFilter<long> A5Filter(filterIntensity, 0);
+ExponentialFilter<long> A6Filter(filterIntensity, 0);
+ExponentialFilter<long> A7Filter(filterIntensity, 0);
+long currentMillis = 0;
+long lastMeasurement = 0;
+
+void setup() {
+
+  Serial.begin(9600);
+
+  //check BLE connection
+  if(!BLE.begin()) {
+
+    Serial.println("starting BLE failed!");
+    while(1);
+  }
+
+  //further set up of service and characteristic
+  BLE.setLocalName("GestureClassification");
+  BLE.setAdvertisedService(classificationService);
+  classificationService.addCharacteristic(classificationInt);
+  BLE.addService(classificationService);
+
+  BLE.advertise();
+
+}
+
+void loop() {
+
+    //initialize input pins
+  //run once
+
+  if(!measure) {
+
+    for (short i = 0; i< size_inPins; i++){
+
+          //Serial.println(inPins[i]);
+          pinMode(inPins[i], INPUT);
+    }
+    pinMode(button_pin, INPUT_PULLUP);
+
+    measure = true;
+
+
+   //end initializing
+
+
+   //start actual loop
+  while (measure) {
+
+     //connect to BLE central device
+     BLEDevice central = BLE.central();
+
+     button_state = digitalRead(button_pin);
+
+     //start measuring if button is pressed
+     if (button_state == LOW) {
+
+
+      int sensor_data[steps][size_inPins];
+      int startMillis = millis();
+      int currentStep = 0;
+
+      while (currentMillis < (startMillis+duration)){
+        currentMillis = millis();
+
+          delay(1);
+          int RawValueA1 = analogRead(A1);
+          A1Filter.Filter(RawValueA1);
+          int RawValueA2 = analogRead(A2);
+          A2Filter.Filter(RawValueA2);
+          int RawValueA3 = analogRead(A3);
+          A3Filter.Filter(RawValueA3);
+          int RawValueA4 = analogRead(A4);
+          A4Filter.Filter(RawValueA4);
+          int RawValueA5 = analogRead(A5);
+          A5Filter.Filter(RawValueA5);
+          int RawValueA6 = analogRead(A6);
+          A6Filter.Filter(RawValueA6);
+//          int RawValueA7 = analogRead(A7);
+//          A7Filter.Filter(RawValueA7);
+
+         if (currentMillis >= lastMeasurement + pause) {  //
+            lastMeasurement = millis();
+
+        //    for (int i = 0; i < steps; i++) {
+            sensor_data[currentStep][0] = A1Filter.Current();
+            sensor_data[currentStep][1] = A2Filter.Current();
+            sensor_data[currentStep][2] = A3Filter.Current();
+            sensor_data[currentStep][3] = A4Filter.Current();
+            sensor_data[currentStep][4] = A5Filter.Current();
+            sensor_data[currentStep][5] = A6Filter.Current();
+//            sensor_data[currentStep][6] = A7Filter.Current();
+            currentStep++;
+
+      /*    for (int j = 0; j < size_inPins; j++) {
+
+
+            sensor_data[i][j] = analogRead(inPins[j]);
+
+            }
+            */
+        // delay(pause);
+    //    }
+      }
+    } //end while
+       //write out sensor data for Anschaulichkeit
+	Serial.println();
+        for(short i=0; i<steps;i++){
+          if(i>0){
+            Serial.print(F(";"));
+           }
+
+          for (short j = 0; j<size_inPins; j++) {
+           if(j>0){
+             Serial.print(F(","));
+           }
+            Serial.print(sensor_data[i][j]);
+          }
+        }
+      Serial.println();
+
+     // compute distance with dtw
